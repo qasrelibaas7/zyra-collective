@@ -87,12 +87,29 @@
             <h3>${product.name}</h3>
             <p>${product.description}</p>
             <p>₹${product.price}</p>
-            <button>Buy Now</button>
+            <button onclick='addToCart(${JSON.stringify(product)})'>Add to Cart</button>
           </div>
         `;
       });
     }
+async function addToCart(product) {
+  const user = auth.currentUser;
 
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  await setDoc(doc(db, "cart", user.uid + "_" + product.name), {
+    userId: user.uid,
+    name: product.name,
+    price: product.price,
+    imageURL: product.imageURL,
+    quantity: 1
+  });
+
+  alert("Added to Cart 🛒");
+}
     // AUTH STATE
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -162,9 +179,11 @@
   <div id="userSection" style="display:none;">
     <h3>Welcome <span id="userEmail"></span></h3>
     <button onclick="logout()">Logout</button>
-
+  <button onclick="loadCart()">View Cart 🛒</button>
     <h2>Our Products</h2>
     <div id="productsContainer"></div>
+    <h2>Your Cart</h2>
+<div id="cartContainer"></div>
   </div>
 
 </body>

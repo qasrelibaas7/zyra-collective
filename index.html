@@ -3,11 +3,26 @@
 <head>
   <title>Zyra Collective</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+    import { 
+      getFirestore, 
+      setDoc, 
+      doc, 
+      collection, 
+      getDocs 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ✅ REAL FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyDynR_WS_pzW8FpwzdmBCJFdB1DFjrMJEM",
       authDomain: "zyra-collective.firebaseapp.com",
@@ -19,52 +34,121 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
-    const db = getFirestore();
+    const db = getFirestore(app);
 
+    // SIGNUP
     window.signup = async function() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", userCred.user.uid), {
-        email: email,
-        role: "user"
-      });
-      alert("Signup Successful");
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          email: email,
+          role: "user"
+        });
+        alert("Signup Successful");
+      } catch (error) {
+        alert(error.message);
+      }
     }
 
+    // LOGIN
     window.login = async function() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login Successful");
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("Login Successful");
+      } catch (error) {
+        alert(error.message);
+      }
     }
 
+    // LOGOUT
     window.logout = async function() {
       await signOut(auth);
       alert("Logged Out");
     }
 
+    // LOAD PRODUCTS
+    async function loadProducts() {
+      const querySnapshot = await getDocs(collection(db, "products"));
+      const container = document.getElementById("productsContainer");
+      container.innerHTML = "";
+
+      querySnapshot.forEach((doc) => {
+        const product = doc.data();
+
+        container.innerHTML += `
+          <div class="product">
+            <img src="${product.imageURL}" width="200"><br>
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <p>₹${product.price}</p>
+            <button>Buy Now</button>
+          </div>
+        `;
+      });
+    }
+
+    // AUTH STATE
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("userSection").style.display = "block";
         document.getElementById("authSection").style.display = "none";
         document.getElementById("userEmail").innerText = user.email;
+
+        loadProducts(); // 🔥 Products load after login
       } else {
         document.getElementById("userSection").style.display = "none";
         document.getElementById("authSection").style.display = "block";
       }
     });
+
   </script>
 
   <style>
-    body { font-family: Arial; text-align:center; background:#111; color:white; }
-    input { padding:10px; margin:5px; }
-    button { padding:10px 20px; margin:5px; background:#ff004f; color:white; border:none; }
-    .product { background:#222; padding:15px; margin:10px; border-radius:10px; }
+    body { 
+      font-family: Arial; 
+      text-align:center; 
+      background:#111; 
+      color:white; 
+    }
+
+    input { 
+      padding:10px; 
+      margin:5px; 
+      border-radius:5px;
+      border:none;
+    }
+
+    button { 
+      padding:10px 20px; 
+      margin:5px; 
+      background:#ff004f; 
+      color:white; 
+      border:none; 
+      border-radius:5px;
+      cursor:pointer;
+    }
+
+    .product { 
+      background:#222; 
+      padding:15px; 
+      margin:10px; 
+      border-radius:10px; 
+    }
+
+    img {
+      border-radius:10px;
+    }
   </style>
 </head>
 
 <body>
+
   <h1>Zyra Collective 🖤</h1>
 
   <div id="authSection">
@@ -80,18 +164,7 @@
     <button onclick="logout()">Logout</button>
 
     <h2>Our Products</h2>
-
-    <div class="product">
-      <h3>Black Street Hoodie</h3>
-      <p>₹1,499</p>
-      <button>Add to Cart</button>
-    </div>
-
-    <div class="product">
-      <h3>Oversized Graphic Tee</h3>
-      <p>₹999</p>
-      <button>Add to Cart</button>
-    </div>
+    <div id="productsContainer"></div>
   </div>
 
 </body>

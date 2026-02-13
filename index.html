@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zyra Collective</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyDynR_WS_pzW8FpwzdmBCJFdB1DFjrMJEM",
+      authDomain: "zyra-collective.firebaseapp.com",
+      projectId: "zyra-collective",
+      storageBucket: "zyra-collective.firebasestorage.app",
+      messagingSenderId: "434398754546",
+      appId: "1:434398754546:web:11275035939321b7a7426b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    window.signup = async function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        email: email,
+        role: "user"
+      });
+      alert("Signup Successful");
+    }
+
+    window.login = async function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("Login Successful");
+    }
+
+    window.logout = async function() {
+      await signOut(auth);
+      alert("Logged Out");
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("userSection").style.display = "block";
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("userEmail").innerText = user.email;
+      } else {
+        document.getElementById("userSection").style.display = "none";
+        document.getElementById("authSection").style.display = "block";
+      }
+    });
+  </script>
+
+  <style>
+    body { font-family: Arial; text-align:center; background:#111; color:white; }
+    input { padding:10px; margin:5px; }
+    button { padding:10px 20px; margin:5px; background:#ff004f; color:white; border:none; }
+    .product { background:#222; padding:15px; margin:10px; border-radius:10px; }
+  </style>
+</head>
+
+<body>
+  <h1>Zyra Collective 🖤</h1>
+
+  <div id="authSection">
+    <h3>Login / Signup</h3>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="signup()">Signup</button>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="userSection" style="display:none;">
+    <h3>Welcome <span id="userEmail"></span></h3>
+    <button onclick="logout()">Logout</button>
+
+    <h2>Our Products</h2>
+
+    <div class="product">
+      <h3>Black Street Hoodie</h3>
+      <p>₹1,499</p>
+      <button>Add to Cart</button>
+    </div>
+
+    <div class="product">
+      <h3>Oversized Graphic Tee</h3>
+      <p>₹999</p>
+      <button>Add to Cart</button>
+    </div>
+  </div>
+
+</body>
+</html>
